@@ -1,5 +1,5 @@
 algorithm,input_type,n,trial,time_ms,mem_kb
-mergesort,random,1000,1,0.301,8
+
 quicksort,random,1000,1,0.2712,0
 insertionsort,random,1000,1,2.4792,0
 selectionsort,random,1000,1,2.1784,0
