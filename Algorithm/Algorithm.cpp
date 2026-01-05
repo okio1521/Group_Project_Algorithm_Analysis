@@ -1,11 +1,11 @@
-#include <iostream>
+﻿#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
-#include <iomanip> // for fixed and setprecision
+#include <iomanip>
 
 using namespace std;
 using namespace chrono;
@@ -46,14 +46,24 @@ void insertionSort(vector<int>& arr) {
     }
 }
 
+/* ================= MERGE SORT ================= */
+
 void merge(vector<int>& arr, int left, int mid, int right) {
-    int n1 = mid - left + 1, n2 = right - mid;
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
     vector<int> L(n1), R(n2);
-    for (int i = 0; i < n1; i++) L[i] = arr[left + i];
-    for (int j = 0; j < n2; j++) R[j] = arr[mid + 1 + j];
+
+    for (int i = 0; i < n1; i++)
+        L[i] = arr[left + i];
+    for (int j = 0; j < n2; j++)
+        R[j] = arr[mid + 1 + j];
+
     int i = 0, j = 0, k = left;
+
     while (i < n1 && j < n2)
         arr[k++] = (L[i] <= R[j]) ? L[i++] : R[j++];
+
     while (i < n1) arr[k++] = L[i++];
     while (j < n2) arr[k++] = R[j++];
 }
@@ -67,19 +77,31 @@ void mergeSort(vector<int>& arr, int left, int right) {
     }
 }
 
+/* ================= QUICK SORT (FIXED) ================= */
+/* Pivot changed to middle element to avoid stack overflow */
+
 int partition(vector<int>& arr, int low, int high) {
-    int pivot = arr[high], i = low - 1;
-    for (int j = low; j < high; j++)
-        if (arr[j] < pivot) swap(arr[++i], arr[j]);
-    swap(arr[i + 1], arr[high]);
-    return i + 1;
+    int pivot = arr[(low + high) / 2];
+    int i = low, j = high;
+
+    while (i <= j) {
+        while (arr[i] < pivot) i++;
+        while (arr[j] > pivot) j--;
+
+        if (i <= j) {
+            swap(arr[i], arr[j]);
+            i++;
+            j--;
+        }
+    }
+    return i;
 }
 
 void quickSort(vector<int>& arr, int low, int high) {
     if (low < high) {
         int pi = partition(arr, low, high);
         quickSort(arr, low, pi - 1);
-        quickSort(arr, pi + 1, high);
+        quickSort(arr, pi, high);
     }
 }
 
@@ -89,19 +111,23 @@ void quickSort(vector<int>& arr, int low, int high) {
 
 vector<int> generateRandomData(int size) {
     vector<int> arr(size);
-    for (int i = 0; i < size; i++) arr[i] = rand();
+    for (int i = 0; i < size; i++)
+        arr[i] = i + 1;
+    random_shuffle(arr.begin(), arr.end());
     return arr;
 }
 
 vector<int> generateSortedData(int size) {
     vector<int> arr(size);
-    for (int i = 0; i < size; i++) arr[i] = i;
+    for (int i = 0; i < size; i++)
+        arr[i] = i + 1;
     return arr;
 }
 
 vector<int> generateReverseData(int size) {
     vector<int> arr(size);
-    for (int i = 0; i < size; i++) arr[i] = size - i;
+    for (int i = 0; i < size; i++)
+        arr[i] = size - i;
     return arr;
 }
 
@@ -114,29 +140,34 @@ struct Result {
     double memoryMB;
 };
 
-// Estimate memory usage for each algorithm
 double estimateMemoryMB(const string& algo, int n) {
     size_t bytes = 0;
+
     if (algo == "Bubble" || algo == "Selection" || algo == "Insertion") {
-        bytes = n * sizeof(int); // in-place sort
+        bytes = n * sizeof(int);
     }
     else if (algo == "Merge") {
-        bytes = n * sizeof(int) * 2; // original + temp arrays
+        bytes = n * sizeof(int) * 2;
     }
     else if (algo == "Quick") {
-        bytes = n * sizeof(int); // array
-        bytes += log2(n) * sizeof(int); // recursion stack
+        bytes = n * sizeof(int);
+        bytes += log2(n) * sizeof(int);
     }
-    return bytes / (1024.0 * 1024.0); // MB
+
+    return bytes / (1024.0 * 1024.0);
 }
 
-Result measurePerformance(void (*sortFunc)(vector<int>&), vector<int> arr, const string& algoName) {
+Result measurePerformance(void (*sortFunc)(vector<int>&),
+    vector<int>& arr,
+    const string& algoName) {
     auto start = high_resolution_clock::now();
     sortFunc(arr);
     auto stop = high_resolution_clock::now();
-    double elapsedSec = duration<double>(stop - start).count(); // seconds
-    double memMB = estimateMemoryMB(algoName, arr.size());
-    return { elapsedSec, memMB };
+
+    double elapsed = duration<double>(stop - start).count();
+    double mem = estimateMemoryMB(algoName, arr.size());
+
+    return { elapsed, mem };
 }
 
 /* =====================================================
@@ -144,13 +175,13 @@ Result measurePerformance(void (*sortFunc)(vector<int>&), vector<int> arr, const
    ===================================================== */
 
 void printArray(const vector<int>& arr) {
-    for (int i = 0; i < arr.size(); i++)
-        cout << arr[i] << " ";
+    for (int v : arr)
+        cout << v << " ";
     cout << endl;
 }
 
 /* =====================================================
-   MAIN FUNCTION
+   MAIN
    ===================================================== */
 
 int main() {
@@ -162,16 +193,18 @@ int main() {
         cout << "Enter array size (up to 100000): ";
         cin >> size;
 
-        int typeChoice;
-        cout << "Select array type:\n1. Random\n2. Sorted\n3. Reverse\nEnter choice: ";
-        cin >> typeChoice;
+        int choice;
+        cout << "Select array type:\n";
+        cout << "1. Random\n2. Sorted\n3. Reverse\n";
+        cout << "Enter choice: ";
+        cin >> choice;
 
         vector<int> data;
-        if (typeChoice == 1) data = generateRandomData(size);
-        else if (typeChoice == 2) data = generateSortedData(size);
-        else if (typeChoice == 3) data = generateReverseData(size);
+        if (choice == 1) data = generateRandomData(size);
+        else if (choice == 2) data = generateSortedData(size);
+        else if (choice == 3) data = generateReverseData(size);
         else {
-            cout << "Invalid choice. Exiting.\n";
+            cout << "Invalid choice.\n";
             return 0;
         }
 
@@ -180,41 +213,39 @@ int main() {
         else cout << "(Array too large to display)\n";
 
         vector<int> arrCopy;
+        cout << fixed << setprecision(6);
 
-        cout << fixed << setprecision(6); // readable decimal for s and MB
-
-        // Bubble Sort
         arrCopy = data;
         cout << "\nBubble Sort:\n";
         Result res = measurePerformance(bubbleSort, arrCopy, "Bubble");
         if (size <= 50) printArray(arrCopy);
         cout << "Time: " << res.timeSec << " s | Memory: " << res.memoryMB << " MB\n";
 
-        // Selection Sort
         arrCopy = data;
         cout << "\nSelection Sort:\n";
         res = measurePerformance(selectionSort, arrCopy, "Selection");
         if (size <= 50) printArray(arrCopy);
         cout << "Time: " << res.timeSec << " s | Memory: " << res.memoryMB << " MB\n";
 
-        // Insertion Sort
         arrCopy = data;
         cout << "\nInsertion Sort:\n";
         res = measurePerformance(insertionSort, arrCopy, "Insertion");
         if (size <= 50) printArray(arrCopy);
         cout << "Time: " << res.timeSec << " s | Memory: " << res.memoryMB << " MB\n";
 
-        // Merge Sort
         arrCopy = data;
-        res = measurePerformance([](vector<int>& a) { mergeSort(a, 0, a.size() - 1); }, arrCopy, "Merge");
         cout << "\nMerge Sort:\n";
+        res = measurePerformance([](vector<int>& a) {
+            mergeSort(a, 0, a.size() - 1);
+            }, arrCopy, "Merge");
         if (size <= 50) printArray(arrCopy);
         cout << "Time: " << res.timeSec << " s | Memory: " << res.memoryMB << " MB\n";
 
-        // Quick Sort
         arrCopy = data;
-        res = measurePerformance([](vector<int>& a) { quickSort(a, 0, a.size() - 1); }, arrCopy, "Quick");
         cout << "\nQuick Sort:\n";
+        res = measurePerformance([](vector<int>& a) {
+            quickSort(a, 0, a.size() - 1);
+            }, arrCopy, "Quick");
         if (size <= 50) printArray(arrCopy);
         cout << "Time: " << res.timeSec << " s | Memory: " << res.memoryMB << " MB\n";
 
